@@ -38,7 +38,7 @@ void Display();
 void Destroy();
 float AvgLapTime();
 void FastestLap();
-void CompareLapTimes(char *r1, char *r2);
+void CompareLapTimes(char *racer1, char *r2);
 
 /* MAIN */
 int main()
@@ -124,15 +124,15 @@ int main()
             break;
         case 5:
         {
-            char racer1[MAX_NAME_LEN];
+            char raceracer1[MAX_NAME_LEN];
             char racer2[MAX_NAME_LEN];
             printf("Enter the name of the first racer: ");
-            fgets(racer1, MAX_NAME_LEN, stdin);
-            racer1[strcspn(racer1, "\n")] = '\0';
+            fgets(raceracer1, MAX_NAME_LEN, stdin);
+            raceracer1[strcspn(raceracer1, "\n")] = '\0';
             printf("Enter the name of the second racer: ");
             fgets(racer2, MAX_NAME_LEN, stdin);
             racer2[strcspn(racer2, "\n")] = '\0';
-            CompareLapTimes(racer1, racer2);
+            CompareLapTimes(raceracer1, racer2);
         }
         break;
 
@@ -157,6 +157,13 @@ int main()
     }
 }
 
+/* FUNCTION IMPLEMENTATIONS */
+
+/// @brief Creates a new node for the queue
+/// @param name
+/// @param sector_times
+/// @param sector_count
+/// @return Pointer to the newly created node
 node *Create(char *name, float *sector_times, int sector_count)
 {
     node *new_node = (node *)malloc(sizeof(node));
@@ -176,27 +183,34 @@ node *Create(char *name, float *sector_times, int sector_count)
     return new_node;
 }
 
+/// @brief Adds a lap time to the queue
+/// @param name
+/// @param sector_times
+/// @param sector_count
 void Enqueue(char *name, float *sector_times, int sector_count)
 {
     node *new_node = Create(name, sector_times, sector_count);
 
-    if (front == NULL && rear == NULL)
+    if (front == NULL && rear == NULL) // If the queue was empty
     {
         front = rear = new_node;
     }
-    else
+    else // Normal case
     {
         rear->next = new_node;
         rear = new_node;
     }
 }
 
+/// @brief Removes the oldest lap time from the queue
+/// @return 0 if successful, -1 if queue is empty
 int Dequeue()
 {
-    if (front == NULL)
+    if (front == NULL) // If queue was empty
     {
         return -1;
     }
+
     struct node *ptr = front;
     // Free sector_times array
     if (ptr->racer && ptr->racer->lap.sector_times)
@@ -204,13 +218,14 @@ int Dequeue()
     // Free Racer struct
     if (ptr->racer)
         free(ptr->racer);
-    if (front == rear)
+
+    if (front == rear) // If only one node was present
     {
         front = rear = NULL;
         free(ptr);
         return 0;
     }
-    else
+    else // Normal case
     {
         front = front->next;
         free(ptr);
@@ -218,13 +233,15 @@ int Dequeue()
     }
 }
 
+/// @brief Displays all lap times in the queue
 void Display()
 {
-    if (front == NULL)
+    if (front == NULL) // If queue is empty
     {
         printf("Queue is empty!\n");
         return;
     }
+
     printf("\n========================== RACETRACK SCOREBOARD ==========================\n");
     printf("| %-20s | %-12s | %-10s | %-20s |\n", "Racer Name", "Total Time", "Sectors", "Sector Times");
     printf("--------------------------------------------------------------------------\n");
@@ -247,21 +264,24 @@ void Display()
     }
 }
 
+/// @brief Destroys the entire queue and frees memory
 void Destroy()
 {
-    if (front == NULL)
+    if (front == NULL) // If queue is empty
     {
         printf("Queue is empty!\n");
         return;
     }
-    while (front != NULL)
+    while (front != NULL) // Recursively dequeuing all nodes
         Dequeue();
     printf("Queue destroyed.\n");
 }
 
+/// @brief Calculates the average lap time across all racers
+/// @return Average lap time
 float AvgLapTime()
 {
-    if (front == NULL)
+    if (front == NULL) // If queue is empty
     {
         printf("Queue is empty!\n");
         return 0.0f;
@@ -276,19 +296,20 @@ float AvgLapTime()
         float lap_time = 0.0f;
         for (int i = 0; i < ptr->racer->lap.sector_count; i++)
         {
-            lap_time += ptr->racer->lap.sector_times[i];
+            lap_time += ptr->racer->lap.sector_times[i]; // Summing up all sector times
         }
-        total_time += lap_time;
+        total_time += lap_time; // Summing up all lap times
         lap_count++;
         ptr = ptr->next;
     }
 
-    return lap_count ? total_time / lap_count : 0.0f;
+    return lap_count ? total_time / lap_count : 0.0f; // If more than 0 laps, return average
 }
 
+/// @brief Finds the fastest lap across all times
 void FastestLap()
 {
-    if (front == NULL)
+    if (front == NULL) // If queue is empty
     {
         printf("Queue is empty!\n");
         return;
@@ -303,10 +324,10 @@ void FastestLap()
         float lap_time = 0.0f;
         for (int i = 0; i < ptr->racer->lap.sector_count; i++)
         {
-            lap_time += ptr->racer->lap.sector_times[i];
+            lap_time += ptr->racer->lap.sector_times[i]; // Summing up all sector times
         }
 
-        if (min_time == -1.0f || lap_time < min_time)
+        if (min_time == -1.0f || lap_time < min_time) // Finding minimum lap time
         {
             min_time = lap_time;
             strncpy(best_name, ptr->racer->name, MAX_NAME_LEN - 1);
@@ -319,64 +340,60 @@ void FastestLap()
     printf("Fastest Lap: %s with %.2f seconds\n", best_name, min_time);
 }
 
-void CompareLapTimes(char *r1, char *r2)
+/// @brief Compares average lap times between two racers
+/// @param racer1
+/// @param racer2
+void CompareLapTimes(char *racer1, char *racer2)
 {
     node *temp = front;
-    float time1 = -1.0f;
-    float time2 = -1.0f;
-    float avg_time1 = -1.0f;
-    float avg_time2 = -1.0f;
-    int count1 = 1;
-    int count2 = 1;
+    float sum1 = 0.0f, sum2 = 0.0f;
+    int count1 = 0, count2 = 0;
 
+    // Traversing the queue to find all lap times for both racers
     while (temp != NULL)
     {
-        if (strcmp(temp->racer->name, r1) == 0)
+        if (strcmp(temp->racer->name, racer1) == 0)
         {
-            time1 = 0.0f;
+            float lap_time = 0.0f;
             for (int i = 0; i < temp->racer->lap.sector_count; i++)
-            {
-                time1 += temp->racer->lap.sector_times[i];
-            }
+                lap_time += temp->racer->lap.sector_times[i];
+            sum1 += lap_time;
             count1++;
         }
-        if (strcmp(temp->racer->name, r2) == 0)
+        if (strcmp(temp->racer->name, racer2) == 0)
         {
-            time2 = 0.0f;
+            float lap_time = 0.0f;
             for (int i = 0; i < temp->racer->lap.sector_count; i++)
-            {
-                time2 += temp->racer->lap.sector_times[i];
-            }
+                lap_time += temp->racer->lap.sector_times[i];
+            sum2 += lap_time;
             count2++;
         }
         temp = temp->next;
     }
 
-    if (time1 == -1.0f)
+    // If either racer was not found
+    if (count1 == 0)
     {
-        printf("Racer %s not found.\n", r1);
+        printf("%s not found.\n", racer1);
         return;
     }
-    if (time2 == -1.0f)
+    if (count2 == 0)
     {
-        printf("Racer %s not found.\n", r2);
+        printf("%s not found.\n", racer2);
         return;
     }
 
-    avg_time1 = time1 / (count1 - 1);
-    avg_time2 = time2 / (count2 - 1);
+    // Calculating average lap times
+    float avg_time1 = sum1 / count1;
+    float avg_time2 = sum2 / count2;
 
-    printf("Comparison of average times between %s and %s:\n", r1, r2);
+    printf("Comparison of average lap times between %s and %s:\n", racer1, racer2);
+    printf("%s: %.2f seconds (average over %d lap(s))\n", racer1, avg_time1, count1);
+    printf("%s: %.2f seconds (average over %d lap(s))\n", racer2, avg_time2, count2);
     if (avg_time1 < avg_time2)
-    {
-        printf("%s is faster by %.2f seconds\n", r1, avg_time2 - avg_time1);
-    }
+        printf("%s is faster by %.2f seconds\n", racer1, avg_time2 - avg_time1);
     else if (avg_time1 > avg_time2)
-    {
-        printf("%s is faster by %.2f seconds\n", r2, avg_time1 - avg_time2);
-    }
+        printf("%s is faster by %.2f seconds\n", racer2, avg_time1 - avg_time2);
     else
-    {
-        printf("Both racers have the same time of %.2f seconds\n", avg_time1);
-    }
+        printf("Both racers have the same average time of %.2f seconds\n", avg_time1);
 }
