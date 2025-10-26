@@ -48,7 +48,7 @@ int main()
         int choice;
         char name[MAX_NAME_LEN];
 
-        printf("\n------- Lap Time Manager -------\n");
+        printf("\n<<<<<<<< Lap Time Manager >>>>>>>>\n");
         printf("1. Add Lap Time\n");
         printf("2. Display All Lap Times\n");
         printf("3. Show Average Lap Time\n");
@@ -57,15 +57,8 @@ int main()
         printf("6. Remove Oldest Lap Time\n");
         printf("0. Exit\n");
         printf("Enter choice (0-6): ");
-        if (scanf("%d", &choice) != 1)
-        {
-            printf("Invalid input. Please enter a number.\n");
-            while (getchar() != '\n')
-                ;
-            continue;
-        }
-        while (getchar() != '\n')
-            ;
+        scanf("%d", &choice);
+        getchar();
 
         switch (choice)
         {
